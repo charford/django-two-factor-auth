@@ -21,6 +21,10 @@ from django_otp.plugins.otp_static.models import StaticToken, StaticDevice
 from django_otp.util import random_hex
 from two_factor import signals
 
+import hashlib, uuid
+from accounts.models import UserProfile
+import random, string, hashlib, uuid
+
 try:
     from otp_yubikey.models import ValidationService, RemoteYubikeyDevice
 except ImportError:
@@ -97,6 +101,13 @@ class LoginView(IdempotentSessionWizardView):
         Login the user and redirect to the desired page.
         """
         login(self.request, self.get_user())
+        user = self.get_user()
+
+        if user is not None:
+            salt = uuid.uuid4().hex
+            password = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+            hashed_password = hashlib.sha512(password + salt).hexdigest()
+            UserProfile.objects.filter(user_id=user.id).update(user_sha=hashed_password)
 
         redirect_to = self.request.GET.get(self.redirect_field_name, '')
         if not is_safe_url(url=redirect_to, host=self.request.get_host()):
