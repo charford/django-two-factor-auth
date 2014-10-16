@@ -54,4 +54,4 @@ class DisableView(FormView):
     def form_valid(self, form):
         for device in devices_for_user(self.request.user):
             device.delete()
-        return redirect(self.redirect_url or str(settings.LOGIN_REDIRECT_URL))
+        return redirect(self.redirect_url or str(settings.DISABLE_TWOFACTOR_REDIRECT_URL) or str(settings.LOGIN_REDIRECT_URL))
